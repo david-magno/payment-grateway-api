@@ -3,6 +3,8 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { V10Module } from './v1.0/v1.0.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ExchangePayment } from './v1.0/entity/exchange-payment.entity';
+import { ResponseService } from './shared/response';
 @Module({
   imports: [
     V10Module,
@@ -16,8 +18,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       autoLoadEntities: true,
       synchronize: true
     }),
+    TypeOrmModule.forFeature([ExchangePayment])
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService,ResponseService],
 })
 export class AppModule {}

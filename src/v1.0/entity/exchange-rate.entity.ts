@@ -14,8 +14,8 @@ export class ExchangeRateStatus{
     @Column()
     merchantName:String
 
-    @Column()
-    merchantAmount:String
+    @Column({precision:10,scale:2,type:"decimal"})
+    merchantAmount:Number
 
     @Column()
     sourceCurrency:String
@@ -28,5 +28,8 @@ export class ExchangeRateStatus{
 
     @Column()
     exchangeRateDate:String
+
+    @Column()
+    signature:String
 
 }

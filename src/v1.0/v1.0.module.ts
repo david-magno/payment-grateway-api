@@ -1,3 +1,4 @@
+import { HttpModule, HttpService } from '@nestjs/axios/dist';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ResponseService } from 'src/shared/response';
@@ -9,7 +10,7 @@ import { V10Controller } from './v1.0.controller';
 import { V10Service } from './v1.0.service';
 
 @Module({
-  imports:[TypeOrmModule.forFeature([ExchangeRateStatus,ForEx,ExchangePayment])],
+  imports:[TypeOrmModule.forFeature([ExchangeRateStatus,ForEx,ExchangePayment]),HttpModule],
   controllers: [V10Controller],
   providers: [V10Service,ExchangeRateStatusDTO,ResponseService]
 })

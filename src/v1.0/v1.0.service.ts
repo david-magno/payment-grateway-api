@@ -8,6 +8,9 @@ import { ForEx } from './entity/forex.entity';
 import { CommonResponses, ExchangePaymentNotifResponse, ResponseService} from 'src/shared/response';
 import { ExchangePaymentDTO } from './dto/exchange-payment.dto';
 import { ExchangePayment } from './entity/exchange-payment.entity';
+import { HttpService } from '@nestjs/axios';
+import { Constansts } from 'src/shared/constants';
+import { Observable } from 'rxjs';
 
 @Injectable()
 export class V10Service {
@@ -18,12 +21,12 @@ export class V10Service {
         private readonly forex:Repository<ForEx>,
         @InjectRepository(ExchangePayment)
         private readonly exchangePayment:Repository<ExchangePayment>,
-        private readonly responseService:ResponseService
+        private readonly responseService:ResponseService,
+        private readonly htttpService:HttpService
     ){}
 
     async GetExchangeRateandStatus(exchangeRateStatusDTO:ExchangeRateStatusDTO){
         let responseMessage = this.responseService.errorResponse(CommonResponses.generalError)
-        let temp = 0;
         if(await this.verifyTransaction(null,exchangeRateStatusDTO.referenceNo)){
             responseMessage = this.responseService.errorResponse(CommonResponses.duplicatePartnerReferenceNo)
         }
@@ -52,8 +55,7 @@ export class V10Service {
              //generate transactionId
             const trxId = uuidv4();
             //get UTC date
-            const date = new Date().toISOString();
-            const exchange = await this.getExchangeRate()
+            const exchange = await this.getExchangeRate(exchangeRateStatusDTO.merchantAmount.currency,exchangeRateStatusDTO.targetCurrency)
             if(!exchange){
                 responseMessage = this.responseService.errorResponseParam(CommonResponses.featureNotAllowedAtThisTime,": Could not get current Currency Value.")
                 return responseMessage
@@ -66,15 +68,14 @@ export class V10Service {
                 merchantStatus:`${1}`,
                 merchantAmount:exchangeRateStatusDTO.merchantAmount,
                 targetCurrency:`${exchangeRateStatusDTO.targetCurrency}`,
-                exchangeRate: `${exchange}`,
-                exchangeRateDate:date,
+                exchangeRate: `${exchange.rate}`,
+                exchangeRateDate:exchange.date,
             }
-
-            await this.saveTransaction(trxId,date,exchange,exchangeRateStatusDTO)
+// 
+            await this.saveTransaction(trxId,exchange.date,exchange.rate,exchangeRateStatusDTO)
 
             return response
         }
-        console.log(responseMessage,temp)
         return responseMessage
     }
     async saveTransaction(trxId, date, exchangeRate ,exchangeRateStatusDTO:ExchangeRateStatusDTO){
@@ -95,23 +96,15 @@ export class V10Service {
         // console.log(query)
     }
 
-    async getExchangeRate(){
+    async getExchangeRate(base,to){
         try{
-            const today = new Date();
-            const yyyy = today.getFullYear();
-            let mm = (today.getMonth() + 1).toString();
-            let dd = (today.getDate()).toString();
-            if (parseFloat(dd) < 10) dd = '0' + dd;
-            if (parseFloat(mm) < 10) mm = '0' + mm;
-            const formattedDate = `${yyyy}-${mm}-${dd}`
-            const query = this.forex.createQueryBuilder("forex")
-            query.andWhere('forex.date = :date',{date:formattedDate})
-
-            
-            const xcr = await query.getOne();
-            if(xcr){
-                return xcr.value
-            }
+            const url = `${Constansts.apiUrl}&base=${base}&to=${to}&amount=1`
+            const result =  await this.htttpService.get(url).toPromise()
+            const time = result.data.lastUpdate
+            const date = new Date(1970,0,1)
+            date.setSeconds(time)
+            return {rate:result.data['rate'],date}
+            // return {rate:result.data.rate,date}
         }catch(err){
             Logger.log(err)
         }
@@ -204,4 +197,5 @@ export class V10Service {
         return(result==null)
     }
 
+    
 }

@@ -18,7 +18,6 @@ import { ResponseService } from './shared/response';
       autoLoadEntities: true,
       synchronize: true
     }),
-    TypeOrmModule.forFeature([ExchangePayment])
   ],
   controllers: [AppController],
   providers: [AppService,ResponseService],

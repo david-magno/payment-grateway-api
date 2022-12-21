@@ -10,8 +10,4 @@ export class AppController {
     return this.appService.healthCheck()
   }
 
-  @Post("/checkTransactionStatus")
-  checkTransactionStatus(@Body('originalPartnerReferenceNo') refNo, @Body('signature') signature){
-    return this.appService.checkStatus(refNo,signature)
-  }
 }

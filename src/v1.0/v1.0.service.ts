@@ -204,4 +204,40 @@ export class V10Service {
         return(result==null)
     }
 
+
+
+    async checkStatus(refNo,signature){
+        let responseMessage = this.responseService.errorResponse(CommonResponses.generalError)
+        if(!signature){
+          responseMessage = this.responseService.errorResponseParam(CommonResponses.invalidMandatoryField,"No Signature provided")
+          return responseMessage
+        }
+        if(refNo){
+          const query = this.exchangePayment.createQueryBuilder('exchange_payment')
+          query.andWhere('referenceNo = :refNo',{refNo})
+          const exchangepayment = await query.getOne()
+          if(exchangepayment){
+              const response = {
+              transactionId:exchangepayment.transactionId,
+              originalPartnerReferenceNo:refNo,
+              paymentAmount:{
+                value:exchangepayment.paidAmountValue,
+                currency:exchangepayment.paidAmountCurrency
+              },
+              transactionDateTime:exchangepayment.paymentDate,
+              status:exchangepayment.transactionStatus,
+              remarks:null,
+              type:"1"
+           }
+           return response
+          }else{
+            responseMessage = this.responseService.errorResponse(CommonResponses.transactionNotFound);
+          }
+        }
+        else{
+            responseMessage = this.responseService.errorResponseParam(CommonResponses.invalidMandatoryField,"No Reference Number provided")
+        }
+        return responseMessage
+    }
+
 }

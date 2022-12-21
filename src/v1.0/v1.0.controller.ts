@@ -33,4 +33,17 @@ export class V10Controller {
        res.status(200).send(response)
        return
     }
+
+    @Post("/checkTransactionStatus")
+    async checkTransactionStatus(@Body('originalPartnerReferenceNo') refNo, @Body('signature') signature,@Res() res){
+      const response = await this.v10Service.checkStatus(refNo,signature)
+
+      if(response.http){
+            res.status(response.http).send({code:response.http+response.code,message:response.message})
+            return
+      }
+
+      res.status(200).send(response)
+      return
+    }
 }
